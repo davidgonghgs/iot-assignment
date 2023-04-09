@@ -2,13 +2,10 @@
 
 const char* ssid = "Winnie"; //your WiFi Name
 const char* password = "DavidGHS24";  //Your Wifi Password
-int ledPin = 03; 
-WiFiServer server(80);
+WiFiServer server(88);
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(9600);
   delay(10); 
-  pinMode(ledPin, OUTPUT);
-  digitalWrite(ledPin, LOW); 
   Serial.println();
   Serial.println();
   Serial.print("Connecting to ");
@@ -42,12 +39,12 @@ void loop() {
   client.flush(); 
   int value = LOW;
   if (request.indexOf("/LED=ON") != -1)  {
-    digitalWrite(ledPin, HIGH);
     value = HIGH;
+    Serial.println("HIGH");    
   }
   if (request.indexOf("/LED=OFF") != -1)  {
-    digitalWrite(ledPin, LOW);
-    value = LOW;
+     value = LOW;
+    Serial.println("LOW");  
   }
   client.println("HTTP/1.1 200 OK");
   client.println("Content-Type: text/html");
