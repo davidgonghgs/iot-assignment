@@ -4,7 +4,7 @@
 ### ESP8266 nodemcu
 https://randomnerdtutorials.com/esp8266-pinout-reference-gpios/
 https://www.espressif.com/en/products/socs/esp8266
-
+https://www.instructables.com/Quick-Start-to-Nodemcu-ESP8266-on-Arduino-IDE/
 
 ## Sensors
 ### Infrared (IR) HW-201  
