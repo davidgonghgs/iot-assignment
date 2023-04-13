@@ -1,9 +1,16 @@
 #include <SPI.h>
 #include <MFRC522.h>
+#include "ESP8266WiFi.h"
 #define SS_PIN 15
 #define RST_PIN 16
 MFRC522 rfid(SS_PIN, RST_PIN); //实例化类
 MFRC522::MIFARE_Key key;
+
+
+
+// WiFi parameters to be configured
+const char* ssid = "FIRSTCITY"; // Write here your router's username
+const char* password = "fcuc1234"; // Write here your router's passward
 
 // Init array that will store new NUID
 byte nuidPICC[4];
@@ -35,6 +42,21 @@ void setup() {
   Serial.println(F("This code scan the MIFARE Classic NUID."));
   Serial.print(F("Using the following key:"));
   printHex(key.keyByte, MFRC522::MF_KEY_SIZE);
+
+    // Connect to WiFi
+  WiFi.begin(ssid, password);
+
+  // while wifi not connected yet, print '.'
+  // then after it connected, get out of the loop
+  while (WiFi.status() != WL_CONNECTED) {
+     delay(500);
+     Serial.print(".");
+  }
+  //print a new line, then print WiFi connected and the IP address
+  Serial.println("");
+  Serial.println("WiFi connected");
+  // Print the IP address
+  Serial.println(WiFi.localIP());
 }  
 
 void loop() {  
