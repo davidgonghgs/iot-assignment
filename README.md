@@ -32,14 +32,16 @@ https://arduinointro.com/projects/adding-sounds-to-arduino-using-the-mh-fmd-piez
 ## Arduino IDE
 need install some things.
 
-1.Tools > Boards Manager > search ESP8266 > install
+1. Tools > Boards Manager > search ESP8266 > install
 
 ![img.png](img.png)
 
-2.Tools > Manager Libraries > search RFID_MFRC522V2 > install
+2. Tools > Manager Libraries > search RFID_MFRC522V2 > install
 
 ![img_1.png](img_1.png)
 
+3. thingspeak
+4. 
 # support
 ## Wifi
 https://stackoverflow.com/questions/50080260/arduino-ide-cant-find-esp8266wifi-h-file
