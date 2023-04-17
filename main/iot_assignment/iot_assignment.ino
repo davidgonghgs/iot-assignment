@@ -4,11 +4,17 @@
 #include <SPI.h>
 #include <MFRC522.h>
 #include <ESP8266WiFi.h>
-
+#include <ThingSpeak.h>
 
 
 #define SS_PIN 15  //D8
 #define RST_PIN 16 //D0
+
+
+// Define ThingSpeak credentials
+unsigned long channelID =  2109747;
+const char* writeAPIKey = "810Y1B680Q80M34N";
+
 
 MFRC522 rfid(SS_PIN, RST_PIN); //实例化类
 MFRC522::MIFARE_Key key;
@@ -27,25 +33,32 @@ Servo servo;
 const char* ssid = "David"; // Write here your router's username
 const char* password = "DavidGHS123"; // Write here your router's passward
 
-
-const int led = 0; //LED D3 
-const int ir = 5; //ir sensor D1  
-const int sg = 2; //sg90 2
-
+//hc-04                                                                                                             
+const int trigPin = 0; //trigPin D3 
+const int echoPin = 5; //echoPin D1  
+const int sg = 2; //sg90 2 D4           
+                                                             
+String UART_String="";
+int ledVal = 0;
 int angle = 0;
+long duration;
 int i,cm; 
+String rfidNumber="";
 // Init array that will store new NUID
 byte nuidPICC[4];
 
-String UART_String="";
+
+ //using Wifi class
+WiFiClient client;
 
 void setup() {  
   // uart1.begin(9600);
   // uart1.listen();
   Serial.begin(115200);
+  pinMode(trigPin, OUTPUT); // Sets the trigPin as an Output
+  pinMode(echoPin, INPUT); // Sets the echoPin as an Input
 
-
-  
+  //RFID
   SPI.begin(); // Init SPI bus
   rfid.PCD_Init(); // Init MFRC522
   Serial.println();
@@ -61,7 +74,6 @@ void setup() {
 
     // Connect to WiFi
   WiFi.begin(ssid, password);
-
   // while wifi not connected yet, print '.'
   // then after it connected, get out of the loop
   while (WiFi.status() != WL_CONNECTED) {
@@ -73,33 +85,22 @@ void setup() {
   Serial.println("WiFi connected");
   // Print the IP address
   Serial.println(WiFi.localIP());
-
-  pinMode(led, OUTPUT);  
-  pinMode(ir,INPUT);  
+  // Initialize ThingSpeak
+  ThingSpeak.begin(client);
   
     // for sg90
-  servo.attach(sg);
-  servo.write(angle);
-
-
+  // servo.attach(sg);
+  // servo.write(angle);
 }  
 
 void loop() {  
 
   
   rfidFunction();
-
+  hc04();
  
-  
-  if (digitalRead(ir)==LOW){ //object is detected  
-    Serial.println("Led LOW"); 
-    digitalWrite(led,LOW);  
-  }  
-  else{ //no object detected  
-    Serial.println("Led HIGH"); 
-    digitalWrite(led,HIGH);  
-  }  
 
+  //sg09
   //    // scan from 0 to 180 degrees
   // for(angle = 10; angle < 180; angle++)  
   // {                                  
@@ -113,29 +114,60 @@ void loop() {
   //   delay(15);       
   // } 
 
-   if(Serial.available()>0)
-  {
-    if(Serial.peek()!='\n')//在收到换行符前软串口接受数据并链接为字符串
-    {
-      UART_String+=(char)Serial.read();
-    }
-    else
-    {
-      Serial.read();
-      const size_t capacity = JSON_OBJECT_SIZE(2) + 30;
-      DynamicJsonDocument doc(capacity);
-      deserializeJson(doc, UART_String);
-      cm = doc["cm"].as<int>();
-      Serial.print("UART_String = ");
-      Serial.println(UART_String);
-      Serial.print("cm = ");
-      Serial.println(cm);
-      UART_String="";
-      while (Serial.read() >= 0) {} //清除串口缓存
-    }
+
+
+  //read data from ardunio
+  //  if(Serial.available()>0)
+  // {
+  //   if(Serial.peek()!='\n')//在收到换行符前软串口接受数据并链接为字符串
+  //   {
+  //     UART_String+=(char)Serial.read();
+  //   }
+  //   else
+  //   {
+  //     Serial.read();
+  //     const size_t capacity = JSON_OBJECT_SIZE(2) + 30;
+  //     DynamicJsonDocument doc(capacity);
+  //     deserializeJson(doc, UART_String);
+  //     cm = doc["cm"].as<int>();
+  //     Serial.print("UART_String = ");
+  //     Serial.println(UART_String);
+  //     Serial.print("cm = ");
+  //     Serial.println(cm);
+  //     UART_String="";
+  //     while (Serial.read() >= 0) {} //清除串口缓存
+  //   }
+  // }
+
+ // Send sensor value to ThingSpeak
+  ThingSpeak.setField(1,ledVal);
+  ThingSpeak.setField(2,cm);
+  ThingSpeak.setField(3,rfidNumber);    
+  int status = ThingSpeak.writeFields(channelID,writeAPIKey);
+  if (status == 200) {
+    Serial.println("Sensor value sent to ThingSpeak!"); 
+  }else {
+    Serial.println("Problem updating channel. HTTP error code " + String(status));
   }
-  delay(100);
+   delay(20000);
+    Serial.println("----------------------------------------");
 }  
+
+
+void hc04(){
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  // Sets the trigPin on HIGH state for 10 micro seconds
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+  // Reads the echoPin, returns the sound wave travel time in microseconds
+  duration = pulseIn(echoPin, HIGH);
+  // Calculating the distance
+  cm = duration * 0.034 / 2;
+  // Prints the distance on the Serial Monitor
+  Serial.println(String("{\"cm\":")+String(cm)+String("}"));
+}
 
 void rfidFunction(){
   //Reset the loop if no new card present on the sensor/reader. This saves the entire process when idle.
@@ -176,8 +208,9 @@ void rfidFunction(){
       //    printHex(rfid.uid.uidByte, rfid.uid.size);
       Serial.println();
       Serial.print(F("In dec: "));
-      printDec(rfid.uid.uidByte, rfid.uid.size);
-      Serial.println();
+      rfidNumber = decToStr(rfid.uid.uidByte, rfid.uid.size);
+      // printDec(rfid.uid.uidByte, rfid.uid.size);
+      Serial.println(rfidNumber);
 
     }
     else 
@@ -189,8 +222,8 @@ void rfidFunction(){
 
       Serial.println();
       Serial.print(F("In dec: "));
-      printDec(rfid.uid.uidByte, rfid.uid.size);
-      Serial.println();
+      rfidNumber = decToStr(rfid.uid.uidByte, rfid.uid.size);
+      Serial.println(rfidNumber);
       Serial.println(F("Card read previously."));
     }
     // Halt PICC
@@ -230,6 +263,14 @@ String hexToStr(byte *buffer, byte bufferSize) {
   return str;
 }
 
+
+String decToStr(byte *buffer, byte bufferSize) {
+  String str = "";
+  for (byte i = 0; i < bufferSize; i++) {
+    str += String(buffer[i], DEC);
+  }
+  return str;
+}
 
 
 
