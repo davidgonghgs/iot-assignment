@@ -1,10 +1,7 @@
-/*
-  Ultrasonic Sensor HC-SR04 and Arduino Tutorial
 
-  by Dejan Nedelkovski,
-  www.HowToMechatronics.com
+#include <SoftwareSerial.h>
 
-*/
+SoftwareSerial espSerial(0, 1);//RX TX
 // defines pins numbers
 const int trigPin = 9;
 const int echoPin = 10;
@@ -14,7 +11,8 @@ int distance;
 void setup() {
   pinMode(trigPin, OUTPUT); // Sets the trigPin as an Output
   pinMode(echoPin, INPUT); // Sets the echoPin as an Input
-  Serial.begin(9600); // Starts the serial communication
+  Serial.begin(115200); // Starts the serial communication
+  //espSerial.begin(115200);
 }
 void loop() {
   // Clears the trigPin
@@ -29,6 +27,7 @@ void loop() {
   // Calculating the distance
   distance = duration * 0.034 / 2;
   // Prints the distance on the Serial Monitor
-  Serial.print("Distance: ");
-  Serial.println(distance);
+  Serial.println("{\"cm\":"+String(distance)+"}");
+  
+  delay(1000);
 }
