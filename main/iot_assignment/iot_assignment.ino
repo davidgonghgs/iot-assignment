@@ -92,11 +92,11 @@ void loop() {
  
   
   if (digitalRead(ir)==LOW){ //object is detected  
-    //Serial.println("Led LOW"); 
+    Serial.println("Led LOW"); 
     digitalWrite(led,LOW);  
   }  
   else{ //no object detected  
-    //Serial.println("Led HIGH"); 
+    Serial.println("Led HIGH"); 
     digitalWrite(led,HIGH);  
   }  
 
