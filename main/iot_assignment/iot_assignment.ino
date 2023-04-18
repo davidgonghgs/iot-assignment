@@ -43,7 +43,7 @@ int ledVal = 0;
 int angle = 0;
 long duration;
 int i,cm; 
-String rfidNumber="";
+String rfidNumber="0";
 // Init array that will store new NUID
 byte nuidPICC[4];
 
@@ -149,8 +149,9 @@ void loop() {
   }else {
     Serial.println("Problem updating channel. HTTP error code " + String(status));
   }
+  rfidNumber = "0";
    delay(20000);
-    Serial.println("----------------------------------------");
+    Serial.println("----------------------------------------");    
 }  
 
 
