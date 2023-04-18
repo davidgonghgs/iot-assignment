@@ -108,8 +108,8 @@ void loop() {
       Serial.println(error.c_str());
       return;
     }
-    int led1 = jsonDoc["led1"]; // Get the value of led1
-    int led2 = jsonDoc["led2"]; // Get the value of led2
+    led1 = jsonDoc["led1"]; // Get the value of led1
+    led2 = jsonDoc["led2"]; // Get the value of led2
     Serial.print("led1 value: ");
     Serial.println(led1);
     Serial.print("led2 value: ");
