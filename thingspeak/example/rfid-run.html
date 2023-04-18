@@ -1,0 +1,98 @@
+<html>
+<head>
+
+  <!--
+
+  NOTE: This plugin will not be visible on public views of a channel.
+        If you intend to make your channel public, consider using the
+        MATLAB Visualization App to create your visualizations.
+
+  -->
+
+  <title>Google Gauge - ThingSpeak</title>
+
+  <style type="text/css">
+    body { background-color: #ddd; }
+    #container { height: 100%; width: 100%; display: table; }
+    #inner { vertical-align: middle; display: table-cell; }
+    #gauge_div { width: 120px; margin: 0 auto; }
+  </style>
+
+  <script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/jquery/1.9.1/jquery.min.js'></script>
+  <script type='text/javascript' src='https://www.google.com/jsapi'></script>
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  <script type='text/javascript'>
+
+    // set your channel id here
+    var channel_id = 2109747;
+    // set your channel's read api key here if necessary
+    var api_key = 'JQKG0QN0ALOY5T19';
+
+    // load the google gauge visualization
+    google.charts.load('current', {'packages':['table']});
+    google.charts.setOnLoadCallback(initChart);
+
+    //get malaysia time
+    function getMalaysiaTime() {
+      var d = new Date();
+      var utc = d.getTime() + (d.getTimezoneOffset() * 60000);
+      var nd = new Date(utc + (3600000*8));
+      return nd.toLocaleString();
+    }
+
+
+    function drawTable(rfid) {
+      var data = new google.visualization.DataTable();
+      data.addColumn('string', 'ID');
+      data.addColumn('string', 'Time');
+      data.addRow(
+              [rfid, getMalaysiaTime()]
+      );
+      var table = new google.visualization.Table(document.getElementById('table_div'));
+      table.draw(data, {showRowNumber: true, width: '100%', height: '100%'});
+    }
+
+    // load the data
+    function loadData() {
+      // variable for the data point
+      var p;
+      // get the data from thingspeak
+      $.getJSON('https://api.thingspeak.com/channels/' + channel_id + '/feed/last.json?api_key=' + api_key, function(data) {
+        // get the data point
+        p = data.field3;
+        // if there is a data point display it
+        if (p) {
+          drawTable(p);
+        }
+      });
+    }
+
+    // initialize the chart
+    function initChart() {
+
+      var data = new google.visualization.DataTable();
+      data.addColumn('string', 'ID');
+      data.addColumn('string', 'Time');
+      data.addRows(1);
+      var table = new google.visualization.Table(document.getElementById('table_div'));
+      table.draw(data, {showRowNumber: true, width: '100%', height: '100%'});
+
+      loadData();
+      // load new data every 20 seconds
+      setInterval('loadData()', 20000);
+    }
+
+  </script>
+
+</head>
+
+<body>
+<div id="table_div"></div>
+</body>
+</html>
+
+
+
+
+
+
