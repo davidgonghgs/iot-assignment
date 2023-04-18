@@ -1,45 +1,43 @@
-
-#include <SoftwareSerial.h>
-
-// SoftwareSerial espSerial(0, 1);//RX TX
-// defines pins numbers
 const int ir1 = 8;
 const int led1 = 9;
 
-const int ir2 = 5;
-const int led2 = 6;
+const int ir2 = 10;
+const int led2 = 11;
 // defines variables
 long duration;
-int distance;
+int distance,led1Val,led2Val;
 void setup() {
   pinMode(ir1,INPUT);  
   pinMode(led1, OUTPUT);  
   pinMode(ir2,INPUT);  
   pinMode(led2, OUTPUT);  
-  Serial.begin(115200); // Starts the serial communication
-  // espSerial.begin(115200);
+  Serial.begin(115200);
 }
 void loop() {
   
   if (digitalRead(ir1)==LOW){ //object is detected  
-    Serial.println("Led1 LOW"); 
+    //Serial.println("Led1 LOW"); 
     digitalWrite(led1,LOW);  
+    led1Val = 0;
   }  
   else{ //no object detected  
-    Serial.println("Led1 HIGH"); 
+  //  Serial.println("Led1 HIGH"); 
     digitalWrite(led1,HIGH);  
+    led1Val = 1;
   }  
 
   if (digitalRead(ir2)==LOW){ //object is detected  
-    Serial.println("Led2 LOW"); 
+   // Serial.println("Led2 LOW"); 
     digitalWrite(led2,LOW);  
+    led2Val = 0;
   }  
   else{ //no object detected  
-    Serial.println("Led2 HIGH"); 
+   // Serial.println("Led2 HIGH"); 
     digitalWrite(led2,HIGH);  
+    led2Val = 1;
   }  
-
-  // Prints the distance on the Serial Monitor
-  //espSerial.println(String("{\"cm\":")+String(distance)+String("}"));
-  delay(100);
+  char s[200];
+  sprintf(s, "{\"led1\":%d,\"led2\":%d}", led1Val,led2Val);
+  Serial.println(s);
+  delay(20000);
 }

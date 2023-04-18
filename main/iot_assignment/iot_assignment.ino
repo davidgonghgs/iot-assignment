@@ -1,15 +1,13 @@
 #include <ArduinoJson.h>
-#include <SoftwareSerial.h>
-#include <Servo.h>
+// #include <Servo.h>
 #include <SPI.h>
 #include <MFRC522.h>
 #include <ESP8266WiFi.h>
 #include <ThingSpeak.h>
 
-
+//#include <SoftwareSerial.h>
 #define SS_PIN 15  //D8
 #define RST_PIN 16 //D0
-
 
 // Define ThingSpeak credentials
 unsigned long channelID =  2109747;
@@ -24,9 +22,7 @@ MFRC522::MIFARE_Key key;
 //D6 MISO
 //D0 RST
 
-//Started SoftwareSerial at RX and TX pin of ESP8266/NodeMCU
-// SoftwareSerial uart1(3,1);
-Servo servo;
+// Servo servo;
 
 
 // WiFi parameters to be configured
@@ -39,8 +35,9 @@ const int echoPin = 5; //echoPin D1
 const int sg = 2; //sg90 2 D4           
                                                              
 String UART_String="";
-int ledVal = 0;
 int angle = 0;
+int led1 = 0;
+int led2 = 0;
 long duration;
 int i,cm; 
 String rfidNumber="0";
@@ -52,9 +49,23 @@ byte nuidPICC[4];
 WiFiClient client;
 
 void setup() {  
-  // uart1.begin(9600);
-  // uart1.listen();
+
   Serial.begin(115200);
+  // Connect to WiFi
+  WiFi.begin(ssid, password);
+  // while wifi not connected yet, print '.'
+  // then after it connected, get out of the loop
+  while (WiFi.status() != WL_CONNECTED) {
+     delay(500);
+     Serial.print(".");
+  }
+  //print a new line, then print WiFi connected and the IP address
+  Serial.println("WiFi connected");
+  // Print the IP address
+  Serial.println(WiFi.localIP());
+
+
+  
   pinMode(trigPin, OUTPUT); // Sets the trigPin as an Output
   pinMode(echoPin, INPUT); // Sets the echoPin as an Input
 
@@ -72,33 +83,38 @@ void setup() {
   Serial.print(F("Using the following key:"));
   printHex(key.keyByte, MFRC522::MF_KEY_SIZE);
 
-    // Connect to WiFi
-  WiFi.begin(ssid, password);
-  // while wifi not connected yet, print '.'
-  // then after it connected, get out of the loop
-  while (WiFi.status() != WL_CONNECTED) {
-     delay(500);
-     Serial.print(".");
-  }
-  //print a new line, then print WiFi connected and the IP address
-  Serial.println("");
-  Serial.println("WiFi connected");
-  // Print the IP address
-  Serial.println(WiFi.localIP());
+    
+
   // Initialize ThingSpeak
   ThingSpeak.begin(client);
-  
     // for sg90
   // servo.attach(sg);
   // servo.write(angle);
 }  
 
 void loop() {  
-
-  
+  rfidNumber = "0";
   rfidFunction();
   hc04();
- 
+
+  if (Serial.available()) {
+    String data = Serial.readStringUntil('\n');
+    Serial.print("Received data: ");
+    Serial.println(data);
+   StaticJsonDocument<128> jsonDoc; // Create a JSON document
+    DeserializationError error = deserializeJson(jsonDoc, data); // Deserialize the JSON string into the JSON document
+    if (error) {
+      Serial.print("Error deserializing JSON: ");
+      Serial.println(error.c_str());
+      return;
+    }
+    int led1 = jsonDoc["led1"]; // Get the value of led1
+    int led2 = jsonDoc["led2"]; // Get the value of led2
+    Serial.print("led1 value: ");
+    Serial.println(led1);
+    Serial.print("led2 value: ");
+    Serial.println(led2);
+  }
 
   //sg09
   //    // scan from 0 to 180 degrees
@@ -116,42 +132,19 @@ void loop() {
 
 
 
-  //read data from ardunio
-  //  if(Serial.available()>0)
-  // {
-  //   if(Serial.peek()!='\n')//在收到换行符前软串口接受数据并链接为字符串
-  //   {
-  //     UART_String+=(char)Serial.read();
-  //   }
-  //   else
-  //   {
-  //     Serial.read();
-  //     const size_t capacity = JSON_OBJECT_SIZE(2) + 30;
-  //     DynamicJsonDocument doc(capacity);
-  //     deserializeJson(doc, UART_String);
-  //     cm = doc["cm"].as<int>();
-  //     Serial.print("UART_String = ");
-  //     Serial.println(UART_String);
-  //     Serial.print("cm = ");
-  //     Serial.println(cm);
-  //     UART_String="";
-  //     while (Serial.read() >= 0) {} //清除串口缓存
-  //   }
-  // }
-
  // Send sensor value to ThingSpeak
-  ThingSpeak.setField(1,ledVal);
+  ThingSpeak.setField(1,led1);
   ThingSpeak.setField(2,cm);
   ThingSpeak.setField(3,rfidNumber);    
+  ThingSpeak.setField(4,led2);    
   int status = ThingSpeak.writeFields(channelID,writeAPIKey);
   if (status == 200) {
     Serial.println("Sensor value sent to ThingSpeak!"); 
   }else {
     Serial.println("Problem updating channel. HTTP error code " + String(status));
   }
-  rfidNumber = "0";
    delay(20000);
-    Serial.println("----------------------------------------");    
+   Serial.println("----------------------------------------");    
 }  
 
 
