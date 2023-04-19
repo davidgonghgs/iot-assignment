@@ -140,7 +140,7 @@ void loop() {
   }else {
     Serial.println("Problem updating channel. HTTP error code " + String(status));
   }
-   delay(20000);
+   delay(5000);
    Serial.println("----------------------------------------");    
 }  
 
