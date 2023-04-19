@@ -41,7 +41,8 @@ need install some things.
 ![img_1.png](img_1.png)
 
 3. thingspeak
-4. 
+4. ArduinoJson
+5. Servo
 # support
 ## Wifi
 https://stackoverflow.com/questions/50080260/arduino-ide-cant-find-esp8266wifi-h-file

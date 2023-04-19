@@ -25,8 +25,8 @@ MFRC522::MIFARE_Key key;
 Servo servo;
 
 // WiFi parameters to be configured
-const char* ssid = "David"; // Write here your router's username
-const char* password = "DavidGHS123"; // Write here your router's passward
+const char* ssid = "FIRSTCITY"; // Write here your router's username
+const char* password = "fcuc1234"; // Write here your router's passward
 
 //hc-04                                                                                                             
 const int sg = 2; //sg90 2 D4           
