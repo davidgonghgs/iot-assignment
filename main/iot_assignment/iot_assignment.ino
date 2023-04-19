@@ -1,5 +1,5 @@
 #include <ArduinoJson.h>
-// #include <Servo.h>
+#include <Servo.h>
 #include <SPI.h>
 #include <MFRC522.h>
 #include <ESP8266WiFi.h>
@@ -22,24 +22,22 @@ MFRC522::MIFARE_Key key;
 //D6 MISO
 //D0 RST
 
-// Servo servo;
-
+Servo servo;
 
 // WiFi parameters to be configured
 const char* ssid = "David"; // Write here your router's username
 const char* password = "DavidGHS123"; // Write here your router's passward
 
 //hc-04                                                                                                             
-const int trigPin = 0; //trigPin D3 
-const int echoPin = 5; //echoPin D1  
 const int sg = 2; //sg90 2 D4           
                                                              
 String UART_String="";
 int angle = 0;
 int led1 = 0;
 int led2 = 0;
+int cm = 0;
 long duration;
-int i,cm; 
+int i; 
 String rfidNumber="0";
 // Init array that will store new NUID
 byte nuidPICC[4];
@@ -65,10 +63,6 @@ void setup() {
   Serial.println(WiFi.localIP());
 
 
-  
-  pinMode(trigPin, OUTPUT); // Sets the trigPin as an Output
-  pinMode(echoPin, INPUT); // Sets the echoPin as an Input
-
   //RFID
   SPI.begin(); // Init SPI bus
   rfid.PCD_Init(); // Init MFRC522
@@ -88,14 +82,14 @@ void setup() {
   // Initialize ThingSpeak
   ThingSpeak.begin(client);
     // for sg90
-  // servo.attach(sg);
-  // servo.write(angle);
+  servo.attach(sg);
+  servo.write(angle);
 }  
 
 void loop() {  
   rfidNumber = "0";
   rfidFunction();
-  hc04();
+  // hc04();
 
   if (Serial.available()) {
     String data = Serial.readStringUntil('\n');
@@ -110,25 +104,28 @@ void loop() {
     }
     led1 = jsonDoc["led1"]; // Get the value of led1
     led2 = jsonDoc["led2"]; // Get the value of led2
+    cm = jsonDoc["cm"]; // Get the value of led2
     Serial.print("led1 value: ");
     Serial.println(led1);
     Serial.print("led2 value: ");
     Serial.println(led2);
+    Serial.print("cm value: ");
+    Serial.println(cm);
   }
 
   //sg09
-  //    // scan from 0 to 180 degrees
-  // for(angle = 10; angle < 180; angle++)  
-  // {                                  
-  //   servo.write(angle);               
-  //   delay(15);                   
-  // } 
-  // // now scan back from 180 to 0 degrees
-  // for(angle = 180; angle > 10; angle--)    
-  // {                                
-  //   servo.write(angle);           
-  //   delay(15);       
-  // } 
+  // scan from 0 to 180 degrees
+  for(angle = 10; angle < 180; angle++)  
+  {                                  
+    servo.write(angle);               
+    delay(15);                   
+  } 
+  // now scan back from 180 to 0 degrees
+  for(angle = 180; angle > 10; angle--)    
+  {                                
+    servo.write(angle);           
+    delay(15);       
+  } 
 
 
 
@@ -146,22 +143,6 @@ void loop() {
    delay(20000);
    Serial.println("----------------------------------------");    
 }  
-
-
-void hc04(){
-  digitalWrite(trigPin, LOW);
-  delayMicroseconds(2);
-  // Sets the trigPin on HIGH state for 10 micro seconds
-  digitalWrite(trigPin, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(trigPin, LOW);
-  // Reads the echoPin, returns the sound wave travel time in microseconds
-  duration = pulseIn(echoPin, HIGH);
-  // Calculating the distance
-  cm = duration * 0.034 / 2;
-  // Prints the distance on the Serial Monitor
-  Serial.println(String("{\"cm\":")+String(cm)+String("}"));
-}
 
 void rfidFunction(){
   //Reset the loop if no new card present on the sensor/reader. This saves the entire process when idle.
