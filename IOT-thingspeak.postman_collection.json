@@ -1,0 +1,89 @@
+{
+	"info": {
+		"_postman_id": "941230db-c36a-4b4e-945a-dec6348ae10c",
+		"name": "IOT-thingspeak",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "6583185"
+	},
+	"item": [
+		{
+			"name": "thingspeak - get data",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://api.thingspeak.com/channels/2109747/feed/last.json?api_key=JQKG0QN0ALOY5T19",
+					"protocol": "https",
+					"host": [
+						"api",
+						"thingspeak",
+						"com"
+					],
+					"path": [
+						"channels",
+						"2109747",
+						"feed",
+						"last.json"
+					],
+					"query": [
+						{
+							"key": "api_key",
+							"value": "JQKG0QN0ALOY5T19"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "thingspeak - update data",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "api_key",
+							"value": "810Y1B680Q80M34N",
+							"type": "text"
+						},
+						{
+							"key": "field1",
+							"value": "0",
+							"type": "text"
+						},
+						{
+							"key": "field2",
+							"value": "30",
+							"type": "text"
+						},
+						{
+							"key": "field3",
+							"value": "12345678",
+							"type": "text"
+						},
+						{
+							"key": "field4",
+							"value": "0",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://api.thingspeak.com/update.json",
+					"protocol": "https",
+					"host": [
+						"api",
+						"thingspeak",
+						"com"
+					],
+					"path": [
+						"update.json"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

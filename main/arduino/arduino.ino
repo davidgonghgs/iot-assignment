@@ -47,7 +47,7 @@ void loop() {
   char s[200];
   sprintf(s, "{\"led1\":%d,\"led2\":%d,\"cm\":%d}", led1Val,led2Val,cm);
   Serial.println(s);
-  delay(2000);
+  delay(20000);
 }
 
 void hc04(){
