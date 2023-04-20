@@ -56,7 +56,7 @@ https://stackoverflow.com/questions/50080260/arduino-ide-cant-find-esp8266wifi-h
 https://thingspeak.com/
 
 ## Google Visualization API 
-https://developers.google.com/chart/interactive/docs/reference?hl=en
+https://developers.google.com/chart/interactive/docs?hl=en
 
 
 
