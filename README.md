@@ -1,4 +1,8 @@
 # iot-assignment
+# github
+https://github.com/davidgonghgs/iot-assignment
+
+
 # Head Ware
 ## Board:
 ### ESP8266 nodemcu
@@ -46,6 +50,16 @@ need install some things.
 # support
 ## Wifi
 https://stackoverflow.com/questions/50080260/arduino-ide-cant-find-esp8266wifi-h-file
+
+# Relate Thingspeak
+## ThingSpeak
+https://thingspeak.com/
+
+## Google Visualization API 
+https://developers.google.com/chart/interactive/docs/reference?hl=en
+
+
+
 
 
 
