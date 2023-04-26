@@ -40,21 +40,6 @@
         google.charts.load('current', {'packages': ['table']});
         google.charts.setOnLoadCallback(initChart);
 
-        //Convert created_at time to YYYY-MM-DD HH:mm:ss format with Malaysia timezone
-        function convertToMalaysiaTime(getTime) {
-            var date = new Date(getTime);
-            var options = {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                timeZone: 'Asia/Kuala_Lumpur'
-            };
-            return date.toLocaleString('en-GB', options).replace(/\//g, '-');
-        }
-
         function drawTable() {
             var data = new google.visualization.DataTable();
             data.addColumn('string', 'Card ID');
@@ -86,7 +71,6 @@
                 var p = data.field3;
                 var entry_id = data.entry_id;
                 var getTime = data.created_at;
-                //var converted_Time = convertToMalaysiaTime(getTime);
 
                 // UTC date string
                 const utcDateString = getTime;
@@ -99,9 +83,7 @@
 
 // format the date as a string in the "YYYY-MM-DD HH:mm:ss" format
                 const converted_Time = malaysiaDate.toISOString().replace('T', ' ').replace(/\.\d+Z$/, '');
-
                 console.log(converted_Time); // output: "2023-04-26 17:37:58"
-
 
                 if (data_array.length != 0) {
                     // if there is a latest row with the same RFID
@@ -119,14 +101,6 @@
                 if (p) { // if there is a data in p
                     // find the latest row with the same RFID
                     var latest_row_index = -1; // to ensure it is out of the table
-
-                    // if the latest row has an end time, insert as new row without timeout
-                    // if (data_array[latest_row_index][3] != 'N/A') {
-                    //     console.log("He");
-                    //     var new_row = [p, converted_Time, entry_id.toString()];
-                    //     data_array.unshift(new_row);
-                    // }
-
 
                     for (var i = 0; i < data_array.length; i++) { //
                         if (data_array[i][0] == p && data_array[i][3] == "N/A") {
