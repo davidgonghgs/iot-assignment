@@ -1,0 +1,159 @@
+<html>
+<head>
+
+  <title>Google Gauge - ThingSpeak</title>
+  <style type="text/css">
+    body { background-color: #ddd; }
+    #container { height: 100%; width: 100%; display: table; }
+    #inner { vertical-align: middle; display: table-cell; }
+    #gauge_div { width: 120px; margin: 0 auto; }
+  </style>
+  <script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/jquery/1.9.1/jquery.min.js'></script>
+  <script type='text/javascript' src='https://www.google.com/jsapi'></script>
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  <script type='text/javascript'>
+
+    // set your channel id here
+    var channel_id = 2109747;
+    // set your channel's read api key here if necessary
+    var api_key = 'JQKG0QN0ALOY5T19';
+    // initialize the data array
+    var data_array = [];
+
+    // load the google gauge visualization
+    google.charts.load('current', {'packages':['table']});
+    google.charts.setOnLoadCallback(initChart);
+
+    //get malaysia time
+    function getMalaysiaTime() {
+      var d = new Date();
+      var utc = d.getTime() + (d.getTimezoneOffset() * 60000);
+      var nd = new Date(utc + (3600000*8));
+      return nd.toLocaleString();
+    }
+
+
+
+    function drawTable() {
+      var data = new google.visualization.DataTable();
+      data.addColumn('string', 'ID');
+      data.addColumn('string', 'Time');
+      data.addColumn('string', 'Entry ID');
+      data.addColumn('string', 'Time Out');
+	  data.addColumn('string', 'Fee');
+      data.addRows(data_array);
+      var table = new google.visualization.Table(document.getElementById('table_div'));
+      table.draw(data, {showRowNumber: true, width: '100%', height: '100%'});
+    }
+
+ // load the data
+function loadData() {
+  // variable for the data point
+  var p;
+  // get the data from thingspeak
+  $.getJSON('https://api.thingspeak.com/channels/' + channel_id + '/feed/last.json?api_key=' + api_key, function(data) {
+    // get the data point
+    p = data.field3;
+    var entry_id =data.entry_id;
+	
+	var fee = 0.00; 
+	var test= "N/A";
+    if(data_array.length != 0){
+
+    }
+    var last_row = data_array[0];
+    var last_entry_id = last_row[2];
+    //if the latest entry ID not same as the last row, clear the table
+    if (entry_id != last_entry_id) {
+    }
+
+    // if there is a data point add it to the array and redraw the table
+    if (p) {
+      var latest_entry_id = data.entry_id; // store the latest entry ID
+
+      // find the latest row with the same RFID
+      var latest_row_index = -1; // to ensure it is out of the table
+      for (var i = 0; i < data_array.length; i++) {
+        if (data_array[i][0] === p) {
+          latest_row_index = i;
+          
+          // if there is a latest row with the same RFID   
+          var latest_row = data_array[latest_row_index];
+
+          // if the latest row has an end time, insert as new row without timeout
+          if (latest_row[3]) {
+			 console.log("HELLO") ;
+            var new_row = [p, getMalaysiaTime(), latest_entry_id.toString()];
+            data_array.unshift(new_row);
+          }
+		  
+		  
+
+          // if the latest row doesn't have an end time, -update that row with timeout
+          else {
+            latest_row[3] = getMalaysiaTime();
+			
+			
+			 
+			 // calculate fee (start - end time) 
+			  var start_time = new Date(latest_row[1]); //convert back to real date instead of string
+			  var end_time = new Date(latest_row[3]);   
+			  var duration_hours = (end_time - start_time) / (1000 * 60 * 60); // convert milliseconds to hours
+			  var rate_per_hour = 1;
+			  
+			  
+				console.log("can you see me 1?");
+				console.log(duration_hours);
+				console.log(JSON.stringify([duration_hours]));
+			  
+			  //if duration_hours > 1 =  3,600,000 ms then hr* rate, rate, else FOC
+			  if (duration_hours >  3600000) {
+				 fee = duration_hours * rate_per_hour
+				 console.log("can you see me 2?");
+				 console.log(duration_hours);
+				 console.log(JSON.stringify([duration_hours]));
+				 
+				 latest_row[4] = fee.toFixed(2); // add fee to the data array with 2 decimal places
+			  
+			  }
+			
+          }
+      
+        }
+      }
+
+      // if there is no latest row with the same RFID, insert as new row without timeout
+      if (latest_row_index === -1) {
+        var new_row = [p, getMalaysiaTime(), latest_entry_id.toString(), '' , fee.toString()];
+		// add an empty string as the fifth column
+        data_array.unshift(new_row);
+      }
+
+      drawTable();
+    }
+  });
+}
+
+
+// initialize the chart
+function initChart() {
+  var data = new google.visualization.DataTable();
+  data.addColumn('string', 'ID');
+  data.addColumn('string', 'Time');
+  data.addColumn('string', 'Entry ID');
+  data.addColumn('string', 'Time Out');
+  data.addColumn('string', 'Fee');
+  data.addRows(data_array);
+  var table = new google.visualization.Table(document.getElementById('table_div'));
+  table.draw(data, {showRowNumber: true, width: '100%', height: '100%'});
+
+  loadData();
+  // load new data every 20 seconds
+  setInterval('loadData()', 20000);
+}
+ </script>
+</head>
+<body>
+<div id="table_div"></div>
+</body>
+</html>
