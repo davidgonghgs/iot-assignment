@@ -1,0 +1,251 @@
+<html>
+<head>
+
+    <title>Google Gauge - ThingSpeak</title>
+    <style type="text/css">
+        body {
+            background-color: #ddd;
+        }
+
+        #container {
+            height: 100%;
+            width: 100%;
+            display: table;
+        }
+
+        #inner {
+            vertical-align: middle;
+            display: table-cell;
+        }
+
+        #gauge_div {
+            width: 120px;
+            margin: 0 auto;
+        }
+    </style>
+
+    <script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/jquery/1.9.1/jquery.min.js'></script>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type='text/javascript' src='https://www.google.com/jsapi'></script>
+    <script type='text/javascript'>
+        // set your channel id here
+        var channel_id = 2109747;
+        // set your channel's read api key here if necessary
+        var api_key = 'JQKG0QN0ALOY5T19';
+        // initialize the data array
+        var data_array = [];
+
+        // load the google gauge visualization
+        google.charts.load('current', {'packages': ['table']});
+        google.charts.setOnLoadCallback(initChart);
+
+        function drawTable() {
+            var data = new google.visualization.DataTable();
+            data.addColumn('string', 'entry_id');
+            data.addColumn('string', 'Parking Space');
+            data.addColumn('string', 'Start Time');
+            data.addColumn('string', 'End Time');
+            data.addColumn('string', 'Used Time');
+            data.addRows(data_array);
+
+            // Convert the DataTable to a DataView cuz DataTable does not support hide column
+            var dataView = new google.visualization.DataView(data);
+
+            // Set up the view options (e.g. which columns to display)
+            dataView.setColumns([1, 2, 3, 4]);
+            var table = new google.visualization.Table(document.getElementById('table_div'));
+
+            table.draw(dataView, {showRowNumber: true, width: '100%', height: '100%'});
+        }
+
+
+        // load the data
+        function loadData() {
+            // get the data from thingspeak
+            $.getJSON('https://api.thingspeak.com/channels/' + channel_id + '/feed/last.json?api_key=' + api_key, function (data) {
+
+                // get the data point
+                var parking_space1 = data.field1;
+                var parking_space2 = data.field4;
+                //0 = in use, 1 = available
+                var entry_id = data.entry_id;
+                var created_at = data.created_at;
+                var date = new Date(created_at);
+                // Set time zone to Malaysia
+                var options = {
+                    timeZone: 'Asia/Kuala_Lumpur',
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: false
+                };
+                var local_time = date.toLocaleString('en-US', options);
+                console.log("created_at: " + created_at);
+                console.log("local_time: " + local_time);
+
+                // Check if data has already been processed
+                if (data_array.length != 0) {
+                    var latest_row = data_array[0];
+                    var last_entry_id = latest_row[0];
+                    if (last_entry_id != entry_id) {
+                        console.log("This is new data");
+                    } else {
+                        console.log("This is old data");
+                        return;
+                    }
+                }
+
+                //loop through the data array from the latest row to the oldest row, find first parking space 1 and 2 row
+                var first_parking_space1_data_index = null;
+                var first_parking_space2_data_index = null;
+                for (var i = 0; i < data_array.length; i++) {
+                    if (data_array[i][1] == "Parking Space 1" && first_parking_space1_data_index == null) {
+                        first_parking_space1_data_index = i;
+                    }
+                    if (data_array[i][1] == "Parking Space 2" && first_parking_space2_data_index == null) {
+                        first_parking_space2_data_index = i;
+                    }
+                }
+                console.log("parking_space1: " + parking_space1);
+                console.log("parking_space2: " + parking_space2);
+                console.log("first_parking_space1_data_index: " + first_parking_space1_data_index);
+                console.log("first_parking_space2_data_index: " + first_parking_space2_data_index);
+                // If there is no parking space 1 data, insert a new row with "In Use" status
+                if (first_parking_space1_data_index == null && parking_space1 == 0) {
+                    var next_row = [entry_id.toString(), 'Parking Space 1', local_time, 'N/A', 'In Use'];
+                    data_array.unshift(next_row);
+                }
+
+                // If there is no parking space 2 data, insert a new row with "In Use" status
+                if (first_parking_space2_data_index == null && parking_space2 == 0) {
+                    var next_row = [entry_id.toString(), 'Parking Space 2', local_time, 'N/A', 'In Use'];
+                    data_array.unshift(next_row);
+                }
+
+                // If there is parking space 1 data
+                if (first_parking_space1_data_index != null) {
+                    if (data_array[first_parking_space1_data_index][4] == "In Use" && parking_space1 == 1) {
+                        // If it is "In Use" status, update the row with end time
+                        data_array[first_parking_space1_data_index][3] = local_time;
+                        console.log('Parking Space 1: End Time is ' + local_time);
+
+                        // Calculate used time (start - end time)
+                        const start_time = new Date(data_array[first_parking_space1_data_index][2]); //convert back to real date instead of string
+                        const end_time = new Date(data_array[first_parking_space1_data_index][3]);
+                        const used_time = ((end_time - start_time)/60000);
+                        data_array[first_parking_space1_data_index][4] = used_time.toString() + ' minutes';
+                        console.log('Parking Space 1: Used Time is ' + used_time.toString());
+                    } else if (data_array[first_parking_space1_data_index][4] != "In Use" && parking_space1 == 0) {
+                        // If it is not "In Use" status, insert a new row with "In Use" status
+                        var next_row = [entry_id.toString(), 'Parking Space 1', local_time, 'N/A', 'In Use'];
+                        data_array.unshift(next_row);
+                        console.log('Parking Space 1: Start Time is ' + local_time);
+                    }
+                }
+
+                // If there is parking space 2 data
+                if (first_parking_space2_data_index != null) {
+                    if (data_array[first_parking_space2_data_index][4] == "In Use" && parking_space2 == 1) {
+                        // If it is "In Use" status, update the row with end time
+                        data_array[first_parking_space2_data_index][3] = local_time;
+                        console.log('Parking Space 2: End Time is ' + local_time);
+
+                        // Calculate used time (start - end time)
+                        const start_time = new Date(data_array[first_parking_space2_data_index][2]); //convert back to real date instead of string
+                        const end_time = new Date(data_array[first_parking_space2_data_index][3]);
+                        const used_time = ((end_time - start_time) / 60000);
+                        data_array[first_parking_space2_data_index][4] = used_time.toString() + ' minutes';
+                        console.log('Parking Space 2: Used Time is ' + used_time.toString());
+                    } else if (data_array[first_parking_space2_data_index][4] != "In Use" && parking_space2 == 0) {
+                        // If it is not "In Use" status, insert a new row with "In Use" status
+                        var next_row = [entry_id.toString(), 'Parking Space 2', local_time, 'N/A', 'In Use'];
+                        data_array.unshift(next_row);
+                        console.log('Parking Space 2: Start Time is ' + local_time);
+                    }
+                }
+                // Calculate total used time and average used time
+                var total_used_time_in_minutes = 0;
+                for (var i = 0; i < data_array.length; i++) {
+                    if (data_array[i][4] != "In Use") {
+                        total_used_time_in_minutes += parseInt(data_array[i][3]);
+                    }
+                }
+
+                var avg_used_time_in_minutes = total_used_time_in_minutes / 2;
+                console.log('Total Used Time: ' + total_used_time_in_minutes + ' minutes');
+                console.log('Average Used Time: ' + avg_used_time_in_minutes + ' minutes');
+
+                // Update the HTML with the parking space availability and total/average used time
+                var parking_space_1_status = data.field1 == '1' ? 'Available' : 'In Use';
+                var parking_space_2_status = data.field4 == '1' ? 'Available' : 'In Use';
+                // follow parking space status change color
+                if (parking_space_1_status == 'Available') {
+                    $('#parking_space_1_status').css('color', 'green');
+                } else {
+                    $('#parking_space_1_status').css('color', 'red');
+                }
+
+                if (parking_space_2_status == 'Available') {
+                    $('#parking_space_2_status').css('color', 'green');
+                } else {
+                    $('#parking_space_2_status').css('color', 'red');
+                }
+
+
+                $('#parking_space_1_status').html('Parking Space 1: ' + parking_space_1_status);
+                $('#parking_space_2_status').html('Parking Space 2: ' + parking_space_2_status);
+                $('#total_used_time').html('Total Used Time: ' + total_used_time_in_minutes + ' minutes');
+                $('#avg_used_time').html('Average Used Time: ' + avg_used_time_in_minutes + ' minutes');
+
+                // Draw the table
+                drawTable();
+            });
+        }
+
+
+        // initialize the chart
+        function initChart() {
+            // Update the HTML with the parking space availability and total/average used time
+            var parking_space_1_status = "N/A";
+            var parking_space_2_status = "N/A";
+
+            $('#parking_space_1_status').html('Parking Space 1: ' + parking_space_1_status);
+            $('#parking_space_2_status').html('Parking Space 2: ' + parking_space_2_status);
+            $('#total_used_time').html('Total Used Time: 0 minutes');
+            $('#avg_used_time').html('Average Used Time: 0 minutes');
+
+            // Set up the table
+            var data = new google.visualization.DataTable();
+            data.addColumn('string', 'Entry ID');
+            data.addColumn('string', 'Parking Space Number');
+            data.addColumn('string', 'Time In');
+            data.addColumn('string', 'Time Out');
+            data.addColumn('string', 'Used Time');
+            data.addRows(data_array);
+            var dataView = new google.visualization.DataView(data);
+            // Set up the view options (e.g. which columns to display)
+            dataView.setColumns([1, 2, 3, 4]);
+            var table = new google.visualization.Table(document.getElementById('table_div'));
+            table.draw(dataView, {showRowNumber: true, width: '100%', height: '100%'});
+
+            // Load new data every 20 seconds
+            loadData();
+            setInterval(loadData, 20000);
+        }
+    </script>
+</head>
+<body>
+<h4> Parking Space Availability:
+    <br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span id="parking_space_1_status"></span>
+    <br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span id="parking_space_2_status"></span>
+</h4>
+<h4> Total Used Time: <span id="total_used_time"></span></h4>
+<h4> Average Used Time: <span id="avg_used_time"></span></h4>
+<div id="table_div"></div>
+</body>
+</html>
