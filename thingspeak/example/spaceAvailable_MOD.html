@@ -1,0 +1,87 @@
+<html>
+<head>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sigmar&display=swap" rel="stylesheet">
+
+  <title>Google Gauge - ThingSpeak</title>
+
+  <style type="text/css">
+    body { background-color: #ddd; }
+    #container { height: 100%; width: 100%; display: table; }
+    #inner { vertical-align: middle; display: table-cell; }
+    #gauge_div { width: 120px; margin: 0 auto; }
+	#table_div td { text-align: center; vertical-align: middle; font-family: 'Sigmar', cursive; font-size: 80px; background-color: #9dc1db; color: white; }
+  </style>
+
+  <script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/jquery/1.9.1/jquery.min.js'></script>
+  <script type='text/javascript' src='https://www.google.com/jsapi'></script>
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  <script type='text/javascript'>
+
+    // set your channel id here
+    var channel_id = 2109747;
+    // set your channel's read api key here if necessary
+    var api_key = 'JQKG0QN0ALOY5T19';
+
+    // load the google gauge visualization
+    google.charts.load('current', {'packages':['table']});
+    google.charts.setOnLoadCallback(initChart);
+
+    function drawTable(x, y) {
+      var data = new google.visualization.DataTable();
+      data.addColumn('string', 'Level');
+      data.addColumn('number', 'Space Available');
+      data.addRow(['Lvl 1', parseInt(x)]);
+      data.addRow(['Lvl 2', parseInt(y)]);
+
+      var table = new google.visualization.Table(document.getElementById('table_div'));
+      var formatter = new google.visualization.ColorFormat();
+      formatter.addRange(-200000, 1, '#FF3232', '');
+      formatter.addRange(1, null, '#147814', '');
+      formatter.format(data, 1); // Apply formatter to second column
+
+      table.draw(data, {allowHtml: true, showRowNumber: false, width: '100%', height: '100%'});
+    }
+
+    // load the data
+    function loadData() {
+      // variables for the data points
+      var x, y;
+      // get the data from thingspeak
+      $.getJSON('https://api.thingspeak.com/channels/' + channel_id + '/feed/last.json?api_key=' + api_key, function(data) {
+        // get the data points
+        x = data.field1;
+        y = data.field4;
+        // if there is a data point display it
+        if (x != null && y != null) {
+          // show parking spaces availability in the table
+          drawTable(x, y);
+        }
+      });
+    }
+
+    // initialize the chart
+    function initChart() {
+
+      var data = new google.visualization.DataTable();
+      data.addColumn('string', 'Level');
+      data.addColumn('number', 'Space Available');
+      data.addRows(2);
+      var table = new google.visualization.Table(document.getElementById('table_div'));
+      table.draw(data, {width: '100%', height: '100%'});
+
+      loadData();
+      // load new data every 20 seconds
+      setInterval('loadData()', 20000);
+    }
+
+  </script>
+
+</head>
+
+<body>
+  <div id="table_div"></div>
+   <div id="colorformat_div"></div>
+</body>
+</html>
