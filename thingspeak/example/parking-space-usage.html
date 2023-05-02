@@ -200,8 +200,8 @@
 
                 $('#parking_space_1_status').html('Parking Space 1: ' + parking_space_1_status);
                 $('#parking_space_2_status').html('Parking Space 2: ' + parking_space_2_status);
-                $('#total_used_time').html('Total Used Time: ' + total_used_time_in_minutes + ' minutes');
-                $('#avg_used_time').html('Average Used Time: ' + avg_used_time_in_minutes + ' minutes');
+                $('#total_used_time').html(total_used_time_in_minutes + ' minutes');
+                $('#avg_used_time').html( avg_used_time_in_minutes + ' minutes');
 
                 // Draw the table
                 drawTable();
@@ -217,8 +217,8 @@
 
             $('#parking_space_1_status').html('Parking Space 1: ' + parking_space_1_status);
             $('#parking_space_2_status').html('Parking Space 2: ' + parking_space_2_status);
-            $('#total_used_time').html('Total Used Time: 0 minutes');
-            $('#avg_used_time').html('Average Used Time: 0 minutes');
+            $('#total_used_time').html(' 0 minutes');
+            $('#avg_used_time').html(' 0 minutes');
 
             // Set up the table
             var data = new google.visualization.DataTable();
