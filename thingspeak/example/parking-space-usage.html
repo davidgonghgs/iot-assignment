@@ -45,7 +45,7 @@
             data.addColumn('string', 'Parking Space');
             data.addColumn('string', 'Start Time');
             data.addColumn('string', 'End Time');
-            data.addColumn('string', 'Used Time');
+            data.addColumn('string', 'Used Time (Minutes)');
             data.addRows(data_array);
 
             // Convert the DataTable to a DataView cuz DataTable does not support hide column
@@ -71,6 +71,11 @@
                 var entry_id = data.entry_id;
                 var created_at = data.created_at;
                 var date = new Date(created_at);
+
+                console.log("parking_space1: " + parking_space1);
+                console.log("parking_space2: " + parking_space2);
+                console.log("entry_id: " + entry_id);
+
                 // Set time zone to Malaysia
                 var options = {
                     timeZone: 'Asia/Kuala_Lumpur',
@@ -109,8 +114,6 @@
                         first_parking_space2_data_index = i;
                     }
                 }
-                console.log("parking_space1: " + parking_space1);
-                console.log("parking_space2: " + parking_space2);
                 console.log("first_parking_space1_data_index: " + first_parking_space1_data_index);
                 console.log("first_parking_space2_data_index: " + first_parking_space2_data_index);
                 // If there is no parking space 1 data, insert a new row with "In Use" status
@@ -136,7 +139,7 @@
                         const start_time = new Date(data_array[first_parking_space1_data_index][2]); //convert back to real date instead of string
                         const end_time = new Date(data_array[first_parking_space1_data_index][3]);
                         const used_time = ((end_time - start_time)/60000);
-                        data_array[first_parking_space1_data_index][4] = used_time.toString() + ' minutes';
+                        data_array[first_parking_space1_data_index][4] = used_time.toString();
                         console.log('Parking Space 1: Used Time is ' + used_time.toString());
                     } else if (data_array[first_parking_space1_data_index][4] != "In Use" && parking_space1 == 0) {
                         // If it is not "In Use" status, insert a new row with "In Use" status
@@ -157,7 +160,7 @@
                         const start_time = new Date(data_array[first_parking_space2_data_index][2]); //convert back to real date instead of string
                         const end_time = new Date(data_array[first_parking_space2_data_index][3]);
                         const used_time = ((end_time - start_time) / 60000);
-                        data_array[first_parking_space2_data_index][4] = used_time.toString() + ' minutes';
+                        data_array[first_parking_space2_data_index][4] = used_time.toString();
                         console.log('Parking Space 2: Used Time is ' + used_time.toString());
                     } else if (data_array[first_parking_space2_data_index][4] != "In Use" && parking_space2 == 0) {
                         // If it is not "In Use" status, insert a new row with "In Use" status
@@ -170,7 +173,7 @@
                 var total_used_time_in_minutes = 0;
                 for (var i = 0; i < data_array.length; i++) {
                     if (data_array[i][4] != "In Use") {
-                        total_used_time_in_minutes += parseInt(data_array[i][3]);
+                        total_used_time_in_minutes += parseInt(data_array[i][4]);
                     }
                 }
 
@@ -223,7 +226,7 @@
             data.addColumn('string', 'Parking Space Number');
             data.addColumn('string', 'Time In');
             data.addColumn('string', 'Time Out');
-            data.addColumn('string', 'Used Time');
+            data.addColumn('string', 'Used Time (Minutes)');
             data.addRows(data_array);
             var dataView = new google.visualization.DataView(data);
             // Set up the view options (e.g. which columns to display)
